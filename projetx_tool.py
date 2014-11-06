@@ -27,21 +27,23 @@ if "__main__" == __name__:
                     print("# Command: status")
                     if len(sys.argv) > 3:
                         if sys.argv[3] == "local":
-                            print()
+                            mani = manifest.Manifest(sys.argv[1])
                         elif sys.argv[3] == "distant":
-                            print()
+                            mani = manifest.Manifest(sys.argv[1])
                     else:
                         print("# Arguments Insufficient ")
                 else:
                     print("# Is Not A Repository")
-            elif sys.argv[2] == "compute":
+            elif sys.argv[2] == "update":
                 if check_dir_format():
-                    print("# Command: compute")
+                    print("# Command: update")
+                    mani = manifest.Manifest(sys.argv[1])
                 else:
                     print("# Is Not A Repository")
             elif sys.argv[2] == "deploy":
                 if check_dir_format():
                     print("# Command: deploy")
+                    mani = manifest.Manifest(sys.argv[1])
                 else:
                     print("# Is Not A Repository")
             elif sys.argv[2] == "create":

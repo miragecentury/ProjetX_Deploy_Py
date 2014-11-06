@@ -3,6 +3,7 @@ __author__ = 'Zeus'
 import os
 import dir
 import time
+import json
 
 
 class Manifest:
@@ -35,13 +36,12 @@ class Manifest:
             os.mkdir(self.pathToDir+"\mods")
             print("# Manifest:: Directory \mods create")
         self.parse()
-        print("##############################")
-        print("Nb Dirs = "+str(len(self.Dirs)))
-        print("Nb Files = "+str(len(self.Files)))
-        print("##############################")
         for xdir in self.Dirs:
-            self.jsonData["Dirs"].append(xdir.path.replace(self.pathToDir+"\mods\\", ''))
+            self.jsonData["Dirs"].append(xdir.path.replace(self.pathToDir+"\mods"+os.sep, ''))
         for xfile in self.Files:
-            self.jsonData["Files"].append(xfile.path.replace(self.pathToDir+"\mods\\", ''))
+            self.jsonData["Files"].append(xfile.path.replace(self.pathToDir+"\mods"+os.sep, ''))
             self.jsonData["FilesCRC"].append(xfile.CRC())
-        print(self.jsonData)
+        jsonDataStr = json.dumps(self.jsonData)
+        f = open(self.pathToDir+"\manifest.json", "w")
+        f.write(jsonDataStr)
+        f.close()
