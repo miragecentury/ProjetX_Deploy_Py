@@ -13,10 +13,10 @@ class Dir:
     def parse(self):
         for x in os.listdir(self.path):
             if os.path.isdir(self.path+os.sep+x):
-                print("# Dir : "+self.path+" : Parse : Dir : "+x)
+                #print("# Dir : "+self.path+" : Parse : Dir : "+x)
                 tmp_dir = Dir(self.path+os.sep+x, self, self.manifest)
                 self.manifest.add_dir(tmp_dir)
                 tmp_dir.parse()
             else:
-                print("# Dir : "+self.path+" : Parse : File : "+x)
+                #print("# Dir : "+self.path+" : Parse : File : "+x)
                 self.manifest.add_file(file.File(self.path+os.sep+x,self,self.manifest))

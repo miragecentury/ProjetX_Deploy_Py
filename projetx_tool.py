@@ -24,14 +24,9 @@ if "__main__" == __name__:
             print("# Repository Dir : "+sys.argv[1])
             if sys.argv[2] == "status":
                 if check_dir_format():
-                    print("# Command: status")
-                    if len(sys.argv) > 3:
-                        if sys.argv[3] == "local":
-                            mani = manifest.Manifest(sys.argv[1])
-                        elif sys.argv[3] == "distant":
-                            mani = manifest.Manifest(sys.argv[1])
-                    else:
-                        print("# Arguments Insufficient ")
+                    print("# Command: Status")
+                    mani = manifest.Manifest(sys.argv[1])
+                    mani.status()
                 else:
                     print("# Is Not A Repository")
             elif sys.argv[2] == "update":
