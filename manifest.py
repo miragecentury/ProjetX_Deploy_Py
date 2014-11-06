@@ -4,6 +4,17 @@ import os
 import dir
 import time
 import json
+import ftp as myftp
+import ftplib
+
+
+class Reader:
+
+  def __init__(self):
+    self.data = ""
+
+  def __call__(self, s):
+     self.data += str(s)
 
 
 class Manifest:
@@ -25,6 +36,42 @@ class Manifest:
     def add_file(self, new_file):
         self.Files.append(new_file)
         self.AFiles[os.path.normcase(new_file.path)] = new_file
+
+    def deploy(self, host, user, paswd, basedir):
+        print("# Manifest : Deploy")
+        fd = myftp.ftp(host, user, paswd)
+        if fd.dir(basedir) == None:
+            try:
+                fd.mkdir(basedir)
+            except ftplib.error_perm:
+                print("Error Create Dir enfin bref ... on continue")
+        r = Reader()
+        testIsAlreadyDeploy = False
+        try:
+            fd.read(basedir+"manifest.json", r)
+            testIsAlreadyDeploy = True
+        except ftplib.error_perm:
+            testIsAlreadyDeploy = False
+            print("Bon on considère qu'il n'est pas là")
+        if testIsAlreadyDeploy:
+            print()
+        else:
+            self.first_deploy(fd, basedir)
+
+        fd.close()
+
+    def first_deploy(self, fd, basedir):
+        self.parse()
+        fd.upload(basedir+"/manifest.json", self.pathToDir+"\manifest.json")
+        fd.mkdir(basedir+"/mods")
+        for xdir in self.Dirs:
+            ftppath = basedir+"mods/"+xdir.path.replace(self.pathToDir+"\mods"+os.sep, '')
+            ftppath = ftppath.replace("\\", "/")
+            fd.mkdir(ftppath)
+        for xfile in self.Files:
+            ftppath = basedir+"mods/"+xfile.path.replace(self.pathToDir+"\mods"+os.sep, '')
+            ftppath = ftppath.replace("\\", "/")
+            fd.upload(ftppath, xfile.path)
 
     def status(self):
         print("# Manifest:: Status")

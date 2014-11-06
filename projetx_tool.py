@@ -29,16 +29,14 @@ if "__main__" == __name__:
                     mani.status()
                 else:
                     print("# Is Not A Repository")
-            elif sys.argv[2] == "update":
-                if check_dir_format():
-                    print("# Command: update")
-                    mani = manifest.Manifest(sys.argv[1])
-                else:
-                    print("# Is Not A Repository")
             elif sys.argv[2] == "deploy":
                 if check_dir_format():
-                    print("# Command: deploy")
-                    mani = manifest.Manifest(sys.argv[1])
+                    if len(sys.argv) >6:
+                        print("# Command: deploy")
+                        mani = manifest.Manifest(sys.argv[1])
+                        mani.deploy(sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+                    else:
+                        print("# Usage : deploy host user passwd")
                 else:
                     print("# Is Not A Repository")
             elif sys.argv[2] == "create":

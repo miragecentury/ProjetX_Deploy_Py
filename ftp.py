@@ -6,17 +6,21 @@ import os
 class ftp:
 
     def __init__(self, host, user, pawd):
-        self.ftpco = ftplib(host)
+        self.ftpco = ftplib.FTP(host)
         self.ftpco.login(user, pawd)
 
-    def upload(self, path):
-        ext = os.path.splitext(path)[1]
-        if ext in (".txt", ".htm", ".html"):
-            self.ftpco.storlines("STOR " + path, open(path))
-        else:
-            self.ftpco.storbinary("STOR " + path, open(path, "rb"), 1024)
+    def read(self, path, callback):
+        return self.ftpco.retrbinary('RETR '+path, callback)
 
-    def remove(self,path):
+    def dir(self, path):
+        return self.ftpco.dir(path)
+
+    def upload(self, ftppath, path):
+        print("# FTP : UPLOAD : "+path+" TO "+ftppath)
+        ext = os.path.splitext(path)[1]
+        self.ftpco.storbinary("STOR " + ftppath, open(path, "rb"), 1024)
+
+    def remove(self, path):
         print("# FTP : REMOVE : "+path)
         self.ftpco.delete(path)
 
