@@ -10,11 +10,18 @@ import ftplib
 
 class Reader:
 
-  def __init__(self):
-    self.data = ""
+    def __init__(self):
+        self.data = ""
 
-  def __call__(self, s):
-     self.data += str(s)
+    def __call__(self, s):
+        self.data = self.data + str(s)
+
+    def getData(self):
+        self.data = self.data[2:-1]
+        self.data = str(self.data).replace("\\\\","\\")
+        return self.data
+
+
 
 
 class Manifest:
@@ -38,23 +45,24 @@ class Manifest:
         self.AFiles[os.path.normcase(new_file.path)] = new_file
 
     def deploy(self, host, user, paswd, basedir):
+        self.update()
         print("# Manifest : Deploy")
         fd = myftp.ftp(host, user, paswd)
         if fd.dir(basedir) == None:
             try:
                 fd.mkdir(basedir)
             except ftplib.error_perm:
-                print("Error Create Dir enfin bref ... on continue")
+                print("")
         r = Reader()
-        testIsAlreadyDeploy = False
         try:
             fd.read(basedir+"manifest.json", r)
+            ftpmanifest = r.getData()
             testIsAlreadyDeploy = True
         except ftplib.error_perm:
             testIsAlreadyDeploy = False
             print("Bon on considère qu'il n'est pas là")
         if testIsAlreadyDeploy:
-            print()
+            self.maj_deploy(fd, basedir, ftpmanifest)
         else:
             self.first_deploy(fd, basedir)
 
@@ -72,6 +80,119 @@ class Manifest:
             ftppath = basedir+"mods/"+xfile.path.replace(self.pathToDir+"\mods"+os.sep, '')
             ftppath = ftppath.replace("\\", "/")
             fd.upload(ftppath, xfile.path)
+
+    def maj_deploy(self, fd, basedir, ftpmanifest):
+        self.parse()
+        ftpmanifest = json.loads(ftpmanifest)
+        #Check Dir
+        currentDirs = list()
+        for xdir in self.Dirs:
+            currentDirs.append(xdir.path.replace(self.pathToDir+"\mods"+os.sep, ''))
+        similarDirs = list()
+        eraseDirs = list()
+        createDirs = list()
+        for xdir in (set(currentDirs).intersection(set(ftpmanifest["Dirs"]))):
+            similarDirs.append(xdir)
+        for xdir in (set(currentDirs).difference(set(currentDirs).intersection(set(ftpmanifest["Dirs"])))):
+            createDirs.append(xdir)
+        for xdir in (set(ftpmanifest["Dirs"]).difference(set(currentDirs).intersection(set(ftpmanifest["Dirs"])))):
+            eraseDirs.append(xdir)
+        print("# Manifest : Status : Similar Dirs = "+str(similarDirs))
+        print("# Manifest : Status : Erase Dirs = "+str(eraseDirs))
+        print("# Manifest : Status : Create Dirs = "+str(createDirs))
+
+        #Check File
+        currentFiles = list()
+        currentFilesCRC = list()
+        for xfile in self.Files:
+            currentFiles.append(xfile.path.replace(self.pathToDir+"\mods"+os.sep, ''))
+            currentFilesCRC.append(xfile.CRC())
+        similarFiles = list()
+        eraseFiles = list()
+        createFiles = list()
+        modifiedFiles = list()
+        for xdir in (set(currentFiles).intersection(set(ftpmanifest["Files"]))):
+            similarFiles.append(xdir)
+        for xdir in (set(currentFiles).difference(set(currentFiles).intersection(set(ftpmanifest["Files"])))):
+            createFiles.append(xdir)
+        for xdir in (set(ftpmanifest["Files"]).difference(set(currentFiles).intersection(set(ftpmanifest["Files"])))):
+            eraseFiles.append(xdir)
+        for xfile in similarFiles:
+            currentCRC = self.AFiles[os.path.normcase(self.pathToDir+os.sep+"mods"+os.sep+xfile)].CRC()
+            manifestCRC = ftpmanifest["FilesCRC"][ftpmanifest["Files"].index(xfile)]
+            if(currentCRC != manifestCRC):
+                print(xfile)
+                modifiedFiles.append(xfile)
+                similarFiles.remove(xfile)
+        print("# Manifest : Status : Similar Files = "+str(similarFiles))
+        print("# Manifest : Status : Erase Files = "+str(eraseFiles))
+        print("# Manifest : Status : Create Files = "+str(createFiles))
+        print("# Manifest : Status : Modify Files = "+str(modifiedFiles))
+
+        #Traitement des fichiers
+        for xfile in eraseFiles:
+            ftppath = basedir+"mods/"+xfile.replace(self.pathToDir+"\mods"+os.sep, '')
+            ftppath = ftppath.replace("\\", "/")
+            print("# Manifest : Deploy : Remove File at FTP : "+ftppath)
+            try:
+                fd.remove(ftppath)
+            except ftplib.error_perm:
+                print("X")
+
+        eraseDirs = eraseDirs[::-1]
+        for xdir in eraseDirs:
+            ftppath = basedir+"mods/"+xdir.replace(self.pathToDir+"\mods"+os.sep, '')
+            ftppath = ftppath.replace("\\", "/")
+            print("# Manifest : Deploy : Remove Dir at FTP : "+ftppath)
+            try:
+                fd.rmdir(ftppath)
+            except ftplib.error_perm:
+                print("X")
+
+        for xdir in createDirs:
+            ftppath = basedir+"mods/"+xdir.replace(self.pathToDir+"\mods"+os.sep, '')
+            ftppath = ftppath.replace("\\", "/")
+            print("# Manifest : Deploy : Create Dir at FTP : "+ftppath)
+            try:
+                fd.mkdir(ftppath)
+            except ftplib.error_perm:
+                print("X")
+
+        for xfile in createFiles:
+            ftppath = basedir+"mods/"+xfile.replace(self.pathToDir+"\mods"+os.sep, '')
+            ftppath = ftppath.replace("\\", "/")
+            print("# Manifest : Deploy : Upload File : "+self.pathToDir+"\mods"+xfile+" TO "+ftppath)
+            try:
+                fd.upload(ftppath, self.pathToDir+"\mods\\"+xfile)
+            except ftplib.error_perm:
+                print("X")
+
+        for xfile in modifiedFiles:
+            ftppath = basedir+"mods/"+xfile.replace(self.pathToDir+"\mods"+os.sep, '')
+            ftppath = ftppath.replace("\\", "/")
+            print("# Manifest : Deploy : Remove File at FTP : "+ftppath)
+            ftppath = basedir+"mods/"+xfile.replace(self.pathToDir+"\mods"+os.sep, '')
+            ftppath = ftppath.replace("\\", "/")
+            print("# Manifest : Deploy : Upload File : "+self.pathToDir+"\mods"+xfile+" TO "+ftppath)
+            try:
+                fd.upload(ftppath, self.pathToDir+"\mods\\"+xfile)
+            except ftplib.error_perm:
+                print("X")
+        testcount = len(createFiles)+len(createDirs)+len(modifiedFiles)+len(eraseDirs)+len(eraseFiles)
+
+        if testcount != 0:
+            fd.remove(basedir+"/manifest.json")
+            fd.upload(basedir+"/manifest.json", self.pathToDir+"\manifest.json")
+
+
+
+
+
+
+    def update(self):
+        os.remove(self.pathToDir+"\manifest.json")
+        self.create()
+
 
     def status(self):
         print("# Manifest:: Status")

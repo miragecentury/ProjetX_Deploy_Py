@@ -30,7 +30,7 @@ class ftp:
 
     def rmdir(self, path):
         print("# FTP : RMDIR : "+path)
-        self.rmd(path)
+        self.ftpco.rmd(path)
 
     def close(self):
         self.ftpco.quit()
