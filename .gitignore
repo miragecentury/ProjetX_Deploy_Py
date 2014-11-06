@@ -41,3 +41,14 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/ProjetX_Deploy_Py.iml
+.idea/scopes/scope_settings.xml
+.idea/vcs.xml
+.idea/workspace.xml
+__pycache__/dir.cpython-34.pyc
+__pycache__/file.cpython-34.pyc
+__pycache__/manifest.cpython-34.pyc
