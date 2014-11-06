@@ -9,9 +9,6 @@ class File:
         self.parent = parent
         self.manifest = manifest
 
-    def check(self):
-        print()
-
     def CRC(self):
         prev = 0
         for eachLine in open(self.path, "rb"):
