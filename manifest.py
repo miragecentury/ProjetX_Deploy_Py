@@ -139,6 +139,7 @@ class Manifest:
             except ftplib.error_perm:
                 print("X")
 
+        eraseDirs.sort()
         eraseDirs = eraseDirs[::-1]
         for xdir in eraseDirs:
             ftppath = basedir+"mods/"+xdir.replace(self.pathToDir+"\mods"+os.sep, '')
@@ -149,6 +150,7 @@ class Manifest:
             except ftplib.error_perm:
                 print("X")
 
+        createDirs.sort()
         for xdir in createDirs:
             ftppath = basedir+"mods/"+xdir.replace(self.pathToDir+"\mods"+os.sep, '')
             ftppath = ftppath.replace("\\", "/")
@@ -184,15 +186,9 @@ class Manifest:
             fd.remove(basedir+"/manifest.json")
             fd.upload(basedir+"/manifest.json", self.pathToDir+"\manifest.json")
 
-
-
-
-
-
     def update(self):
         os.remove(self.pathToDir+"\manifest.json")
         self.create()
-
 
     def status(self):
         print("# Manifest:: Status")
